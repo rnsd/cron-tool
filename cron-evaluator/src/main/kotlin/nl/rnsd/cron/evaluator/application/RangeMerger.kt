@@ -2,12 +2,10 @@ package nl.rnsd.cron.evaluator.application
 
 import nl.rnsd.cron.evaluator.model.CronUnit
 import nl.rnsd.cron.evaluator.model.Numeric
-import nl.rnsd.cron.evaluator.model.RangeExpression
-import nl.rnsd.cron.evaluator.model.SingularValueExpression
-import nl.rnsd.cron.evaluator.model.StepExpression
-import nl.rnsd.cron.evaluator.model.ValueExpression
-
-data class Range(val start: Int, val end: Int)
+import nl.rnsd.cron.evaluator.model.expression.RangeExpression
+import nl.rnsd.cron.evaluator.model.expression.SingularValueExpression
+import nl.rnsd.cron.evaluator.model.expression.StepExpression
+import nl.rnsd.cron.evaluator.model.expression.ValueExpression
 
 /**
  * This class provides methods to merge overlapping ranges and singular values in a list of value expressions.
@@ -15,7 +13,7 @@ data class Range(val start: Int, val end: Int)
  *
  * @param <T> the type of the CronUnit
  */
-class RangeOptimizer {
+class RangeMerger {
 
     /**
      * Given a list of valueExpressions, merge overlapping ranges and singular values (e.g. 1-6, 7, 2-8 -> 1-8)
@@ -25,8 +23,18 @@ class RangeOptimizer {
         valueExpressions: List<ValueExpression<T>>,
         unitSupplier: (String) -> T
     ): List<ValueExpression<T>> {
-        val stepExpressions = valueExpressions.filter { it is StepExpression }
-        val ranges = valueExpressions
+
+        val ranges = extractRanges(valueExpressions)
+        val convertedRanges = mergeOverlappingRanges(ranges)
+            .map { toValueExpression(it, unitSupplier) }
+            .toMutableList()
+        convertedRanges.addAll(valueExpressions.filter { it is StepExpression })
+
+        return convertedRanges
+    }
+
+    private fun <T : CronUnit> extractRanges(valueExpressions: List<ValueExpression<T>>) =
+        valueExpressions
             .asSequence()
             .distinct() //remove duplicates
             .filter { it is RangeExpression || it is SingularValueExpression }
@@ -34,25 +42,24 @@ class RangeOptimizer {
             .sortedBy { it.start }
             .toMutableList()
 
-        val mergedRanges = mergeOverlappingRanges(ranges)
-        val convertedRanges = mergedRanges.map { toValueExpression(it, unitSupplier) }.toMutableList()
-        convertedRanges.addAll(stepExpressions)
-
-        return convertedRanges
-    }
-
     private fun mergeOverlappingRanges(ranges: MutableList<Range>): List<Range> {
-        var i = 0;
-        while (i < ranges.size - 1) {
-            if (overlappingRanges(ranges[i],ranges[i + 1])) {
-                val newRange = merge(ranges[i], ranges[i + 1])
-                ranges.removeAt(i)
-                ranges[i] = newRange
+        val sortedRanges = ranges.sortedBy { it.start }
+
+        val result = mutableListOf<Range>()
+        val rangeIterator = sortedRanges.iterator()
+        var currentRange = rangeIterator.next()
+
+        while (rangeIterator.hasNext()) {
+            val nextRange = rangeIterator.next()
+            if (overlappingRanges(currentRange, nextRange)) {
+                currentRange = merge(currentRange, nextRange)
             } else {
-                i++
+                result.add(currentRange)
+                currentRange = nextRange
             }
         }
-        return ranges
+        result.add(currentRange)
+        return result.toList()
     }
 
     private fun <T : CronUnit> toValueExpression(range: Range, unitSupplier: (String) -> T): ValueExpression<T> {
@@ -70,21 +77,25 @@ class RangeOptimizer {
 
     private fun <T : CronUnit> toRange(valueExpression: ValueExpression<T>): Range {
         return when (valueExpression) {
-            is RangeExpression -> toRange(valueExpression)
-            is SingularValueExpression -> toRange(valueExpression)
+            is RangeExpression -> Range.from(valueExpression)
+            is SingularValueExpression -> Range.from(valueExpression)
             else -> throw IllegalArgumentException("Invalid expression for Pair conversion")
         }
     }
 
-    private fun <T : CronUnit> toRange(rangeExpression: RangeExpression<T>): Range {
-        val startOfRange = (rangeExpression.start.value as Numeric).value
-        val endOfRange = (rangeExpression.end.value as Numeric).value
-        return Range(startOfRange, endOfRange)
-    }
+    data class Range(val start: Int, val end: Int) {
 
-    private fun <T : CronUnit> toRange(singularValueExpression: SingularValueExpression<T>): Range {
-        val value = (singularValueExpression.cronUnit.value as Numeric).value
-        return Range(value, value)
-    }
+        companion object {
+            fun <T : CronUnit> from(rangeExpression: RangeExpression<T>): Range {
+                val startOfRange = rangeExpression.startValue()
+                val endOfRange = rangeExpression.endValue()
+                return Range(startOfRange, endOfRange)
+            }
 
+            fun <T : CronUnit> from(singularValueExpression: SingularValueExpression<T>): Range {
+                val value = (singularValueExpression.cronUnit.value as Numeric).value
+                return Range(value, value)
+            }
+        }
+    }
 }

@@ -1,21 +1,19 @@
 package nl.rnsd.cron.evaluator.application
 
-import nl.rnsd.cron.evaluator.model.CronAttribute
-import nl.rnsd.cron.evaluator.model.CronEvaluationResult
+import nl.rnsd.cron.evaluator.adapter.CronEvaluatorImpl
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.Test
 
-class CronEvaluatorTest {
+class CronEvaluatorImplTest {
 
-    private val cronEvaluator = CronEvaluator(CronExpressionDescriber())
+    private val cronEvaluator = CronEvaluatorImpl(CronExpressionDescriber())
 
     @Test
     fun `evaluates valid expression`() {
         val result = cronEvaluator.evaluate("*", "*", "*", "*", "*")
 
         //assert : returns valid expressions with error messages null and adds explanation
-        assertThat(result).isNotNull
-        assertThat(result!!)
+        assertThat(result)
             .extracting(
                 CronEvaluationResult::minute,
                 CronEvaluationResult::hour,
@@ -38,8 +36,7 @@ class CronEvaluatorTest {
         val result = cronEvaluator.evaluate("65", "25", "40", "*", "*")
 
         //assert : returns invalid expressions and error messages for invalid expressions, explanation is null
-        assertThat(result).isNotNull
-        assertThat(result!!)
+        assertThat(result)
             .extracting(
                 CronEvaluationResult::minute,
                 CronEvaluationResult::hour,

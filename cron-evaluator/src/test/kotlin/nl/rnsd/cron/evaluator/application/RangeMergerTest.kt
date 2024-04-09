@@ -2,10 +2,10 @@ package nl.rnsd.cron.evaluator.application
 
 import nl.rnsd.cron.evaluator.model.CronValue
 import nl.rnsd.cron.evaluator.model.Minute
-import nl.rnsd.cron.evaluator.model.RangeExpression
-import nl.rnsd.cron.evaluator.model.SingularValueExpression
-import nl.rnsd.cron.evaluator.model.StepExpression
-import nl.rnsd.cron.evaluator.model.ValueExpression
+import nl.rnsd.cron.evaluator.model.expression.RangeExpression
+import nl.rnsd.cron.evaluator.model.expression.SingularValueExpression
+import nl.rnsd.cron.evaluator.model.expression.StepExpression
+import nl.rnsd.cron.evaluator.model.expression.ValueExpression
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -18,14 +18,8 @@ class RangeMergerTest {
             RangeExpression(Minute(4), Minute(8))
         )
 
-        val optimizedExpressions = RangeOptimizer().mergeOverlappingRanges(expressions) { str ->
-            //todo minute from string constructor
-            Minute(
-                CronValue.fromString(
-                    str
-                )
-            )
-        }
+        val optimizedExpressions = RangeMerger()
+            .mergeOverlappingRanges(expressions) { str -> Minute(CronValue.fromString(str)) }
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(8))
@@ -41,13 +35,9 @@ class RangeMergerTest {
             RangeExpression(Minute(14), Minute(20)),
         )
 
-        val optimizedExpressions = RangeOptimizer().mergeOverlappingRanges(expressions) { str ->
-            Minute(
-                CronValue.fromString(
-                    str
-                )
-            )
-        }
+        val optimizedExpressions = RangeMerger()
+            .mergeOverlappingRanges(expressions) { str -> Minute(CronValue.fromString(str)) }
+
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(8)),
@@ -63,7 +53,7 @@ class RangeMergerTest {
         )
 
         val optimizedExpressions: List<ValueExpression<Minute>> =
-            RangeOptimizer().mergeOverlappingRanges(expressions, { str: String -> Minute(CronValue.fromString(str)) })
+            RangeMerger().mergeOverlappingRanges(expressions, { str: String -> Minute(CronValue.fromString(str)) })
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(5)),
@@ -82,13 +72,9 @@ class RangeMergerTest {
             RangeExpression(Minute(25), Minute(28))
         )
 
-        val optimizedExpressions = RangeOptimizer().mergeOverlappingRanges(expressions) { str ->
-            Minute(
-                CronValue.fromString(
-                    str
-                )
-            )
-        }
+        val optimizedExpressions = RangeMerger()
+            .mergeOverlappingRanges(expressions) { str -> Minute(CronValue.fromString(str)) }
+
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(8)),
@@ -109,13 +95,9 @@ class RangeMergerTest {
             SingularValueExpression(Minute(19))
         )
 
-        val optimizedExpressions = RangeOptimizer().mergeOverlappingRanges(expressions) { str ->
-            Minute(
-                CronValue.fromString(
-                    str
-                )
-            )
-        }
+        val optimizedExpressions = RangeMerger()
+            .mergeOverlappingRanges(expressions) { str -> Minute(CronValue.fromString(str)) }
+
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(8)),
@@ -136,13 +118,9 @@ class RangeMergerTest {
             SingularValueExpression(Minute(19))
         )
 
-        val optimizedExpressions = RangeOptimizer().mergeOverlappingRanges(expressions) { str ->
-            Minute(
-                CronValue.fromString(
-                    str
-                )
-            )
-        }
+        val optimizedExpressions = RangeMerger()
+            .mergeOverlappingRanges(expressions) { str -> Minute(CronValue.fromString(str)) }
+
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(8)),
@@ -167,7 +145,7 @@ class RangeMergerTest {
         )
 
         val optimizedExpressions: List<ValueExpression<Minute>> =
-            RangeOptimizer().mergeOverlappingRanges(expressions) { str: String -> Minute(CronValue.fromString(str)) }
+            RangeMerger().mergeOverlappingRanges(expressions) { str: String -> Minute(CronValue.fromString(str)) }
 
         assertThat(optimizedExpressions).containsExactly(
             RangeExpression(Minute(1), Minute(10)),

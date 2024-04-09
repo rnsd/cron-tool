@@ -6,16 +6,14 @@ import nl.rnsd.cron.evaluator.model.CronUnit
 import nl.rnsd.cron.evaluator.model.Hour
 import nl.rnsd.cron.evaluator.model.Minute
 import nl.rnsd.cron.evaluator.model.Numeric
-import nl.rnsd.cron.evaluator.model.SingularValueExpression
-import nl.rnsd.cron.evaluator.model.ValueExpression
+import nl.rnsd.cron.evaluator.model.expression.SingularValueExpression
+import nl.rnsd.cron.evaluator.model.expression.ValueExpression
 import nl.rnsd.cron.evaluator.model.util.ExpressionUtils.padNumericToTwoDigits
-import org.springframework.stereotype.Service
 
-@Service
 class CronExpressionDescriber {
     private val space = " "
 
-    fun explain(cronExpression: CronExpression): String {
+    fun describe(cronExpression: CronExpression): String {
         val stringBuilder = StringBuilder()
 
         //hour and minute

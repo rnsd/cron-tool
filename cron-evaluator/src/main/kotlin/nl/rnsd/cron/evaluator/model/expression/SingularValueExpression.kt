@@ -1,15 +1,21 @@
-package nl.rnsd.cron.evaluator.model
+package nl.rnsd.cron.evaluator.model.expression
 
-import nl.rnsd.cron.evaluator.model.util.ExpressionUtils.getMonthName
-import nl.rnsd.cron.evaluator.model.util.ExpressionUtils.getWeekdayName
+import nl.rnsd.cron.evaluator.model.CronUnit
+import nl.rnsd.cron.evaluator.model.DayOfMonth
+import nl.rnsd.cron.evaluator.model.DayOfWeek
+import nl.rnsd.cron.evaluator.model.Hour
+import nl.rnsd.cron.evaluator.model.Minute
+import nl.rnsd.cron.evaluator.model.Month
+import nl.rnsd.cron.evaluator.model.Numeric
+import nl.rnsd.cron.evaluator.model.util.ExpressionUtils
 
 data class SingularValueExpression<T : CronUnit>(val cronUnit: T) : ValueExpression<T>() {
 
     override fun describe(): String? =
         when (cronUnit) {
             is DayOfMonth -> createDescription({ "on day-of-month $it" }, { null })
-            is DayOfWeek -> createDescription({ "on ${getWeekdayName(it)}" }, { null })
-            is Month -> createDescription({ "in ${getMonthName(it)}" }, { null })
+            is DayOfWeek -> createDescription({ "on ${ExpressionUtils.getWeekdayName(it)}" }, { null })
+            is Month -> createDescription({ "in ${ExpressionUtils.getMonthName(it)}" }, { null })
             is Hour -> createDescription({ "past hour $it" }, { null })
             is Minute -> createDescription({ "at minute $it" }, { "at every minute" })
             else -> throw IllegalArgumentException("Invalid cron unit")

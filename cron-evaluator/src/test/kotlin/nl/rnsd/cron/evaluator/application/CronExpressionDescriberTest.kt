@@ -1,6 +1,12 @@
 package nl.rnsd.cron.evaluator.application
 
 import java.util.stream.Stream
+import nl.rnsd.cron.evaluator.application.CronUnitFactory.createDayOfMonth
+import nl.rnsd.cron.evaluator.application.CronUnitFactory.createDayOfWeek
+import nl.rnsd.cron.evaluator.application.CronUnitFactory.createHour
+import nl.rnsd.cron.evaluator.application.CronUnitFactory.createMinute
+import nl.rnsd.cron.evaluator.application.CronUnitFactory.createMonth
+import nl.rnsd.cron.evaluator.application.ExpressionFactory.createValueExpression
 import nl.rnsd.cron.evaluator.model.CronExpression
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.params.ParameterizedTest
@@ -15,7 +21,7 @@ class CronExpressionDescriberTest {
         cronExpression: CronExpression,
         expected: String
     ) {
-        val result = CronExpressionDescriber().explain(cronExpression)
+        val result = CronExpressionDescriber().describe(cronExpression)
         assertThat(result).isEqualTo(expected)
     }
 
@@ -25,7 +31,7 @@ class CronExpressionDescriberTest {
         cronExpression: CronExpression,
         expected: String
     ) {
-        val result = CronExpressionDescriber().explain(cronExpression)
+        val result = CronExpressionDescriber().describe(cronExpression)
         assertThat(result).isEqualTo(expected)
     }
 
@@ -35,7 +41,7 @@ class CronExpressionDescriberTest {
         cronExpression: CronExpression,
         expected: String
     ) {
-        val result = CronExpressionDescriber().explain(cronExpression)
+        val result = CronExpressionDescriber().describe(cronExpression)
         assertThat(result).isEqualTo(expected)
     }
 
@@ -45,7 +51,7 @@ class CronExpressionDescriberTest {
         cronExpression: CronExpression,
         expected: String
     ) {
-        val result = CronExpressionDescriber().explain(cronExpression)
+        val result = CronExpressionDescriber().describe(cronExpression)
         assertThat(result).isEqualTo(expected)
     }
 
@@ -147,7 +153,14 @@ class CronExpressionDescriberTest {
         )
 
         private fun parse(expression: String): CronExpression {
-            return CronParser().parse(expression)
+            val cronExpresssionElements = expression.split(" ")
+            return CronExpression(
+                createValueExpression(cronExpresssionElements[0]) { s -> createMinute(s) }.getOrThrow(),
+                createValueExpression(cronExpresssionElements[1]) { s -> createHour(s) }.getOrThrow(),
+                createValueExpression(cronExpresssionElements[2]) { s -> createDayOfMonth(s) }.getOrThrow(),
+                createValueExpression(cronExpresssionElements[3]) { s -> createMonth(s) }.getOrThrow(),
+                createValueExpression(cronExpresssionElements[4]) { s -> createDayOfWeek(s) }.getOrThrow()
+            )
         }
 
     }

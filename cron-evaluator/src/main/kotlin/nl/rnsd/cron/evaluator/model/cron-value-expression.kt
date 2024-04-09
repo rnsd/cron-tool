@@ -1,5 +1,7 @@
 package nl.rnsd.cron.evaluator.model
 
+import nl.rnsd.cron.evaluator.model.expression.ValueExpression
+
 data class CronExpression(
     val minute: ValueExpression<Minute>,
     val hour: ValueExpression<Hour>,
@@ -7,7 +9,3 @@ data class CronExpression(
     val month: ValueExpression<Month>,
     val dayOfWeek: ValueExpression<DayOfWeek>
 )
-
-sealed class ValueExpression<T : CronUnit> {
-    abstract fun describe(): String?
-}

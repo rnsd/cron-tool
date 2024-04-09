@@ -1,7 +1,14 @@
-package nl.rnsd.cron.evaluator.model
+package nl.rnsd.cron.evaluator.model.expression
 
-import nl.rnsd.cron.evaluator.model.util.ExpressionUtils.getMonthName
-import nl.rnsd.cron.evaluator.model.util.ExpressionUtils.getWeekdayName
+import nl.rnsd.cron.evaluator.model.CronUnit
+import nl.rnsd.cron.evaluator.model.DayOfMonth
+import nl.rnsd.cron.evaluator.model.DayOfWeek
+import nl.rnsd.cron.evaluator.model.Hour
+import nl.rnsd.cron.evaluator.model.Minute
+import nl.rnsd.cron.evaluator.model.Month
+import nl.rnsd.cron.evaluator.model.Numeric
+import nl.rnsd.cron.evaluator.model.WildCard
+import nl.rnsd.cron.evaluator.model.util.ExpressionUtils
 
 data class RangeExpression<T : CronUnit>(val start: T, val end: T) : ValueExpression<T>() {
     init {
@@ -21,11 +28,15 @@ data class RangeExpression<T : CronUnit>(val start: T, val end: T) : ValueExpres
         is DayOfMonth -> createDescription { start, end -> "on every day-of-month from $start through $end" }
 
         is DayOfWeek -> createDescription { start, end ->
-            "on every day-of-week from ${getWeekdayName(start)} through ${getWeekdayName(end)}"
+            "on every day-of-week from ${ExpressionUtils.getWeekdayName(start)} through ${
+                ExpressionUtils.getWeekdayName(
+                    end
+                )
+            }"
         }
 
         is Month -> createDescription { start, end ->
-            "in every month from ${getMonthName(start)} through ${getMonthName(end)}"
+            "in every month from ${ExpressionUtils.getMonthName(start)} through ${ExpressionUtils.getMonthName(end)}"
         }
 
         is Hour -> createDescription { start, end -> "past every hour from $start through $end" }

@@ -1,14 +1,26 @@
 package nl.rnsd.cron.evaluator.application
 
 import nl.rnsd.cron.evaluator.model.CronUnit
-import nl.rnsd.cron.evaluator.model.ListExpression
-import nl.rnsd.cron.evaluator.model.RangeExpression
-import nl.rnsd.cron.evaluator.model.SingularValueExpression
-import nl.rnsd.cron.evaluator.model.StepExpression
-import nl.rnsd.cron.evaluator.model.ValueExpression
+import nl.rnsd.cron.evaluator.model.expression.ListExpression
+import nl.rnsd.cron.evaluator.model.expression.RangeExpression
+import nl.rnsd.cron.evaluator.model.expression.SingularValueExpression
+import nl.rnsd.cron.evaluator.model.expression.StepExpression
+import nl.rnsd.cron.evaluator.model.expression.ValueExpression
 
 object ExpressionFactory {
-    fun <T : CronUnit> create(expression: String, unitSupplier: (String) -> T): ValueExpression<T> {
+
+    fun <T : CronUnit> createValueExpression(expression: String, unitSupplier: (String) -> T): Result<ValueExpression<T>> {
+        return try {
+            Result.success(create(expression) { s -> unitSupplier(s) })
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Unknown error"))
+        }
+    }
+
+    private fun <T : CronUnit> create(
+        expression: String,
+        unitSupplier: (String) -> T
+    ): ValueExpression<T> {
         return when {
             expression.contains(",") -> listExpression(expression, unitSupplier)
             expression.contains("/") -> stepExpression(expression, unitSupplier)
@@ -53,9 +65,9 @@ object ExpressionFactory {
 
         val valueExpressions = expression
             .split(",")
-            .map { create(it, unitSupplier) }
+            .map { createValueExpression(it, unitSupplier).getOrThrow() }
 
-        val optimizedRanges = RangeOptimizer().mergeOverlappingRanges(valueExpressions, unitSupplier)
+        val optimizedRanges = RangeMerger().mergeOverlappingRanges(valueExpressions, unitSupplier)
         return when (optimizedRanges.size) {
             1 -> optimizedRanges.first()
             else -> ListExpression(optimizedRanges.toList())

@@ -1,4 +1,6 @@
-package nl.rnsd.cron.evaluator.model
+package nl.rnsd.cron.evaluator.model.expression
+
+import nl.rnsd.cron.evaluator.model.CronUnit
 
 data class ListExpression<T : CronUnit>(val valueExpressions: List<ValueExpression<T>>) : ValueExpression<T>() {
 
